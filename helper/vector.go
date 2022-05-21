@@ -1,8 +1,9 @@
-package transform
+package helper
 
 import (
 	"math"
 ) // 3D vector: (x, y, z)
+
 type Vector3 struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`

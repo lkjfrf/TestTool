@@ -1,7 +1,7 @@
-package packet
+package content
 
 import (
-	"./transform"
+	"github.com/lkjfrf/TestTool/helper"
 )
 
 type FSendPacket_PlayerLogin struct {
@@ -15,8 +15,14 @@ type FSendPacket_PlayerLogin struct {
 type FSendPacket_PlayerMove struct {
 	PacketName   string
 	Id           string
-	Destination  transform.Vector3
-	DestRotation transform.Vector3
+	Destination  helper.Vector3
+	DestRotation helper.Vector3
 	MoveSpeed    float32
 	RotateSpeed  float32
+}
+
+func New_FSendPacket_PlayerMove() FSendPacket_PlayerMove {
+	result := FSendPacket_PlayerMove{}
+	result.PacketName = "FSendPacket_PlayerMove"
+	return result
 }
