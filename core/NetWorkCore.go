@@ -2,6 +2,8 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net"
 	"reflect"
@@ -26,7 +28,8 @@ func (nc *NetworkCore) Init() {
 }
 
 func (nc *NetworkCore) Connect(IPs []string) []*net.TCPConn {
-	Arr := make([]*net.TCPConn, 0)
+	len := len(IPs)
+	Arr := make([]*net.TCPConn, len)
 
 	for i, _ := range Arr {
 		Arr = append(Arr, nc.ConnectToServer(IPs[i]))
@@ -55,13 +58,39 @@ func (nc *NetworkCore) SendPacket(ConnArr []*net.TCPConn, p interface{}) {
 
 	e, err := json.Marshal(packet)
 	if err != nil {
-		log.Println(err)
+		log.Fatal("Parse Error")
+		return
 	}
 
 	for _, c := range ConnArr {
-		_, err := c.Write(e)
-		if err != nil {
-			log.Println("Packet Send Err : ", err)
+		if c != nil {
+			_, err := (*c).Write(e)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
+}
+
+func (nc *NetworkCore) RecvPacket() {
+	go func() {
+		header := make([]byte, 4096)
+		for {
+			for i, t := range GetTestController().TestServerConnections {
+				n, err := t.Read(header)
+				if err != nil {
+					if err == io.EOF {
+						fmt.Println("EOF err : ", header)
+					}
+					break
+				}
+
+				if n > 0 {
+					fmt.Println(header)
+					GetTestController().TestServerConnections[i].Read(header)
+					log.Println(header)
+				}
+			}
+		}
+	}()
 }

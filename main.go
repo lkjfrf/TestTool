@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/lkjfrf/TestTool/content"
+	"time"
+
 	"github.com/lkjfrf/TestTool/core"
 )
 
@@ -11,8 +12,11 @@ type Player struct {
 }
 
 func main() {
-	content.GetTestController().Init()
+	core.GetTestController().Init()
 	core.GetNetworkCore().Init()
 
-	content.GetTestController().StartTesting()
+	core.GetTestController().StartTesting()
+	//core.GetNetworkCore().RecvPacket()
+
+	time.Sleep(time.Hour * 1)
 }
