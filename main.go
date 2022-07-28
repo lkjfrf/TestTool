@@ -16,7 +16,6 @@ func main() {
 	core.GetNetworkCore().Init()
 
 	core.GetTestController().StartTesting()
-	//core.GetNetworkCore().RecvPacket()
 
 	time.Sleep(time.Hour * 1)
 }
