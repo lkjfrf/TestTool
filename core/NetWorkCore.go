@@ -37,6 +37,16 @@ func (nc *NetworkCore) Connect(IP string, len int) []*net.TCPConn {
 	return Arr
 }
 
+func (nc *NetworkCore) ConnectUDP(IP string, len int) []*net.UDPConn {
+	Arr := []*net.UDPConn{}
+
+	for i := 0; i < len; i++ {
+		Arr = append(Arr, nc.ConnectToUDPServer(IP, string(i)))
+	}
+	//nc.ConnectToUDPServer(IP, "1")
+	return Arr
+}
+
 func (nc *NetworkCore) ConnectToServer(serverAddr string, id string) *net.TCPConn {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", serverAddr)
 	if err != nil {
@@ -49,6 +59,22 @@ func (nc *NetworkCore) ConnectToServer(serverAddr string, id string) *net.TCPCon
 	}
 
 	go nc.Recv(conn, id)
+	return conn
+}
+
+func (nc *NetworkCore) ConnectToUDPServer(serverAddr string, id string) *net.UDPConn {
+	ServerAddr, err := net.ResolveUDPAddr("udp", ":3234")
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println("listening on :3234")
+
+	conn, err := net.DialUDP("udp", nil, ServerAddr)
+	if err != nil {
+		log.Println("Connect Fail : ", err)
+	}
+
+	//go nc.UDPRecv(conn, id)
 	return conn
 }
 
@@ -68,8 +94,52 @@ func (nc *NetworkCore) SendPacket(c *net.TCPConn, recvpkt any, pkttype uint16) {
 
 	}
 }
+func (nc *NetworkCore) SendUDPPacket(c *net.UDPConn, recvpkt any, pkttype uint16) {
+	sendBuffer := MakeSendBuffer(pkttype, recvpkt)
+
+	if c != nil {
+		sent, err := c.Write(sendBuffer)
+		if err != nil {
+			log.Println("SendPacket ERROR :", err)
+		} else {
+			if sent != len(sendBuffer) {
+				log.Println("[Sent diffrent size] : SENT =", sent, "BufferSize =", len(sendBuffer))
+			}
+			log.Println("c:", c, "-", pkttype)
+		}
+
+	}
+}
 
 func (nc *NetworkCore) Recv(conn *net.TCPConn, id string) {
+	header := make([]byte, 4)
+	for {
+		n, err := conn.Read(header)
+		if err != nil {
+			break
+		}
+
+		if n > 0 {
+			pktsize, pktid := nc.ParseHeader(header)
+			datasize := pktsize - 4
+			if datasize > 0 {
+				recv := make([]byte, datasize)
+				_n, _ := conn.Read(recv)
+				fmt.Println(_n, pktid)
+				// if pktid == 12 {
+				// 	recvpkt := JsonStrToStruct[content.SR_Voice](string(recv[:_n]))
+				// 	recvpkt.Id = "tester" + id
+
+				// 	sendBuffer := MakeSendBuffer(12, recvpkt)
+				// 	conn.Write(sendBuffer)
+				// }
+			}
+
+		}
+	}
+}
+
+func (nc *NetworkCore) UDPRecv(conn *net.UDPConn, id string) {
 	header := make([]byte, 4)
 	for {
 		n, err := conn.Read(header)

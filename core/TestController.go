@@ -13,10 +13,11 @@ import (
 )
 
 type TestController struct {
-	TestServerIP          string
-	TestServerConnections []*net.TCPConn
-	TestPeopleCount       int
-	Packets               interface{}
+	TestServerIP             string
+	TestServerConnections    []*net.TCPConn
+	TestUDPServerConnections []*net.UDPConn
+	TestPeopleCount          int
+	Packets                  interface{}
 
 	wg     sync.WaitGroup
 	moveWg sync.WaitGroup
@@ -36,6 +37,7 @@ func (tc *TestController) Init() {
 	log.Println("INIT_TestController")
 
 	tc.TestServerIP = "121.162.7.67:8001"
+	//tc.TestServerUDP = "121.162.7.67:3234"
 	tc.TestPeopleCount = 700
 
 	tc.moveWg = sync.WaitGroup{}
@@ -44,6 +46,7 @@ func (tc *TestController) Init() {
 func (tc *TestController) StartTesting() {
 	log.Println("Start Testing")
 	tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
+	tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerIP, tc.TestPeopleCount)
 	if tc.TestersLogin() {
 		//tc.TesterMove()
 		go tc.TestersChannelEnter()
@@ -68,6 +71,7 @@ func (tc *TestController) TestersChannelEnter() {
 		packet2.ChannelNum = 16
 		packet2.ChannelType = 0
 		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
+		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
 		time.Sleep(time.Microsecond * 100)
 	}
 }
