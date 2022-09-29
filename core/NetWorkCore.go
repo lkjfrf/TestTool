@@ -63,11 +63,10 @@ func (nc *NetworkCore) ConnectToServer(serverAddr string, id string) *net.TCPCon
 }
 
 func (nc *NetworkCore) ConnectToUDPServer(serverAddr string, id string) *net.UDPConn {
-	ServerAddr, err := net.ResolveUDPAddr("udp", ":3234")
+	ServerAddr, err := net.ResolveUDPAddr("udp", serverAddr)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println("listening on :3234")
 
 	conn, err := net.DialUDP("udp", nil, ServerAddr)
 	if err != nil {
@@ -89,7 +88,7 @@ func (nc *NetworkCore) SendPacket(c *net.TCPConn, recvpkt any, pkttype uint16) {
 			if sent != len(sendBuffer) {
 				log.Println("[Sent diffrent size] : SENT =", sent, "BufferSize =", len(sendBuffer))
 			}
-			log.Println("c:", c, "-", pkttype)
+			//log.Println("c:", c, "-", pkttype)
 		}
 
 	}
@@ -105,7 +104,7 @@ func (nc *NetworkCore) SendUDPPacket(c *net.UDPConn, recvpkt any, pkttype uint16
 			if sent != len(sendBuffer) {
 				log.Println("[Sent diffrent size] : SENT =", sent, "BufferSize =", len(sendBuffer))
 			}
-			log.Println("c:", c, "-", pkttype)
+			//log.Println("c:", c, "-", pkttype)
 		}
 
 	}

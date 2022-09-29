@@ -14,6 +14,7 @@ import (
 
 type TestController struct {
 	TestServerIP             string
+	TestServerUDP            string
 	TestServerConnections    []*net.TCPConn
 	TestUDPServerConnections []*net.UDPConn
 	TestPeopleCount          int
@@ -36,23 +37,24 @@ func GetTestController() *TestController {
 func (tc *TestController) Init() {
 	log.Println("INIT_TestController")
 
-	tc.TestServerIP = "121.162.7.67:8001"
-	//tc.TestServerUDP = "121.162.7.67:3234"
-	tc.TestPeopleCount = 700
+	//tc.TestServerIP = "121.162.7.67:8000"
+	tc.TestServerUDP = "192.168.0.6:8005"
+	tc.TestPeopleCount = 900
 
 	tc.moveWg = sync.WaitGroup{}
 }
 
 func (tc *TestController) StartTesting() {
 	log.Println("Start Testing")
-	tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
-	tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerIP, tc.TestPeopleCount)
-	if tc.TestersLogin() {
-		//tc.TesterMove()
-		go tc.TestersChannelEnter()
-		//go tc.HeartBeat()
-		//go tc.ChatTest()
-	}
+	//tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
+	tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerUDP, tc.TestPeopleCount)
+	//if tc.TestersLogin() {
+	//tc.TesterMove()
+	tc.TestersChannelEnter()
+	tc.WatchToggle()
+	//go tc.HeartBeat()
+	//go tc.ChatTest()
+	//}
 }
 
 func (tc *TestController) TestersLogin() bool {
@@ -64,16 +66,18 @@ func (tc *TestController) TestersLogin() bool {
 	}
 	return true
 }
-func (tc *TestController) TestersChannelEnter() {
+func (tc *TestController) TestersChannelEnter() bool {
 	packet2 := content.S_ChannelEnter{}
 	for i := 0; i < tc.TestPeopleCount; i++ {
 		packet2.Id = "tester" + strconv.Itoa(i)
-		packet2.ChannelNum = 16
-		packet2.ChannelType = 0
-		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
+		packet2.ChannelNum = 11
+		packet2.ChannelType = 2
+		//GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
 		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
+		log.Println("Send ChannelEnter ", packet2.Id)
 		time.Sleep(time.Microsecond * 100)
 	}
+	return true
 }
 
 func (tc *TestController) TesterMove() {
@@ -150,5 +154,16 @@ func (tc *TestController) LogOut() {
 			GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.NormalChat)
 			time.Sleep(time.Microsecond * 10)
 		}
+	}
+}
+
+func (tc *TestController) WatchToggle() {
+	packet := content.S_ScreenWatchToggle{}
+	for i := 0; i < tc.TestPeopleCount; i++ {
+		packet.Id = "tester" + strconv.Itoa(int(i))
+		packet.IsOn = true
+		packet.ChannelNum = 11
+		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet, content.EScreenWatchToggle)
+		time.Sleep(time.Microsecond * 10)
 	}
 }

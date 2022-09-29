@@ -70,12 +70,30 @@ const (
 	QuestionList //50
 	ESaveShareData
 	EPlaySaveShareData
-	EEnterAuditorium
+	EEnterFileComplete
 	EUploadComplete
 
 	EScreenDataControlling //55
 	RecvFileStatus
-	ETestPlayerLogin
+	EChannelCreateAfterEnter
+	ERemoveFile
+	EPlaceFBX
+
+	ETestPlayerLogin //60
+	EPlaceLoopingMP4
+	EScreenShare
+	EDownloadPPTtoPDF
+	EGroupChat
+
+	EGroupCreate //65
+	EGroupActive
+	EGroupUserListUpdate
+	ERequestGroupList
+	ERequestGroupUserList
+
+	ESaveGroupAlarm //70
+	EScreenWatchToggle
+	EScreenShareToggle
 
 	Max
 )
@@ -651,4 +669,10 @@ type SR_ScreenDataControlling struct {
 type R_RecvFileStatus struct {
 	TotalSize int32
 	IsEnd     bool
+}
+
+type S_ScreenWatchToggle struct { // 스크린 화면을 보겠다 토글
+	Id         string
+	IsOn       bool
+	ChannelNum int32
 }
