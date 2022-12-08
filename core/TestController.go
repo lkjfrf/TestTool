@@ -38,8 +38,8 @@ func (tc *TestController) Init() {
 	log.Println("INIT_TestController")
 
 	//tc.TestServerIP = "121.162.7.67:8000"
-	tc.TestServerUDP = "192.168.0.6:8005"
-	tc.TestPeopleCount = 900
+	tc.TestServerUDP = "192.168.0.9:8002"
+	tc.TestPeopleCount = 3000
 
 	tc.moveWg = sync.WaitGroup{}
 }
@@ -70,8 +70,8 @@ func (tc *TestController) TestersChannelEnter() bool {
 	packet2 := content.S_ChannelEnter{}
 	for i := 0; i < tc.TestPeopleCount; i++ {
 		packet2.Id = "tester" + strconv.Itoa(i)
-		packet2.ChannelNum = 11
-		packet2.ChannelType = 2
+		packet2.ChannelNum = 259
+		packet2.ChannelType = 0
 		//GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
 		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
 		log.Println("Send ChannelEnter ", packet2.Id)
