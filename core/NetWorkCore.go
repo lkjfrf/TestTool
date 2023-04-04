@@ -119,20 +119,20 @@ func (nc *NetworkCore) Recv(conn *net.TCPConn, id string) {
 		}
 
 		if n > 0 {
-			pktsize, pktid := nc.ParseHeader(header)
-			datasize := pktsize - 4
-			if datasize > 0 {
-				recv := make([]byte, datasize)
-				_n, _ := conn.Read(recv)
-				fmt.Println(_n, pktid)
-				// if pktid == 12 {
-				// 	recvpkt := JsonStrToStruct[content.SR_Voice](string(recv[:_n]))
-				// 	recvpkt.Id = "tester" + id
+			//pktsize, pktid := nc.ParseHeader(header)
+			//datasize := pktsize - 4
+			//if datasize > 0 {
+			//	recv := make([]byte, datasize)
+			//	_n, _ := conn.Read(recv)
+			//	fmt.Println(_n, pktid)
+			// if pktid == 12 {
+			// 	recvpkt := JsonStrToStruct[content.SR_Voice](string(recv[:_n]))
+			// 	recvpkt.Id = "tester" + id
 
-				// 	sendBuffer := MakeSendBuffer(12, recvpkt)
-				// 	conn.Write(sendBuffer)
-				// }
-			}
+			// 	sendBuffer := MakeSendBuffer(12, recvpkt)
+			// 	conn.Write(sendBuffer)
+			// }
+			//}
 
 		}
 	}
@@ -177,12 +177,12 @@ func MakeSendBuffer[T any](pktid uint16, data T) []byte {
 	if err != nil {
 		log.Println("MakeSendBuffer : Marshal Error", err)
 	}
-	sendBuffer := make([]byte, 4)
+	sendBuffer := make([]byte, 6)
 
-	pktsize := len(sendData) + 4
+	pktsize := len(sendData) + 6
 
 	binary.LittleEndian.PutUint16(sendBuffer, uint16(pktsize))
-	binary.LittleEndian.PutUint16(sendBuffer[2:], pktid)
+	binary.LittleEndian.PutUint16(sendBuffer[4:], pktid)
 
 	sendBuffer = append(sendBuffer, sendData...)
 

@@ -676,3 +676,7 @@ type S_ScreenWatchToggle struct { // 스크린 화면을 보겠다 토글
 	IsOn       bool
 	ChannelNum int32
 }
+
+type S_TestPlayerLogin struct {
+	Id string
+}

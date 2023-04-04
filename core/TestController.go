@@ -37,28 +37,29 @@ func GetTestController() *TestController {
 func (tc *TestController) Init() {
 	log.Println("INIT_TestController")
 
+	tc.TestServerIP = "192.168.0.9:8001"
 	//tc.TestServerIP = "121.162.7.67:8000"
-	tc.TestServerUDP = "192.168.0.9:8002"
-	tc.TestPeopleCount = 3000
+	//tc.TestServerUDP = "192.168.0.9:8000"
+	tc.TestPeopleCount = 300
 
 	tc.moveWg = sync.WaitGroup{}
 }
 
 func (tc *TestController) StartTesting() {
 	log.Println("Start Testing")
-	//tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
-	tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerUDP, tc.TestPeopleCount)
-	//if tc.TestersLogin() {
-	//tc.TesterMove()
+	tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
+	//tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerUDP, tc.TestPeopleCount)
+	tc.TestersLogin()
 	tc.TestersChannelEnter()
-	tc.WatchToggle()
+	tc.TesterMove()
+	//tc.WatchToggle()
 	//go tc.HeartBeat()
 	//go tc.ChatTest()
 	//}
 }
 
 func (tc *TestController) TestersLogin() bool {
-	packet := content.S_DBSignin{}
+	packet := content.S_TestPlayerLogin{}
 	for i := 0; i < tc.TestPeopleCount; i++ {
 		packet.Id = "tester" + strconv.Itoa(i)
 		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.ETestPlayerLogin)
@@ -70,10 +71,10 @@ func (tc *TestController) TestersChannelEnter() bool {
 	packet2 := content.S_ChannelEnter{}
 	for i := 0; i < tc.TestPeopleCount; i++ {
 		packet2.Id = "tester" + strconv.Itoa(i)
-		packet2.ChannelNum = 259
-		packet2.ChannelType = 0
-		//GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
-		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
+		packet2.ChannelNum = 179
+		packet2.ChannelType = 4
+		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
+		//GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
 		log.Println("Send ChannelEnter ", packet2.Id)
 		time.Sleep(time.Microsecond * 100)
 	}
