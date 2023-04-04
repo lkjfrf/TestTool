@@ -14,7 +14,6 @@ type Player struct {
 func main() {
 	core.GetTestController().Init()
 	core.GetNetworkCore().Init()
-
 	core.GetTestController().StartTesting()
 
 	time.Sleep(time.Hour * 1)

@@ -1,10 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"log"
-	"math/rand"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
@@ -37,10 +36,8 @@ func GetTestController() *TestController {
 func (tc *TestController) Init() {
 	log.Println("INIT_TestController")
 
-	tc.TestServerIP = "192.168.0.9:8001"
-	//tc.TestServerIP = "121.162.7.67:8000"
-	//tc.TestServerUDP = "192.168.0.9:8000"
-	tc.TestPeopleCount = 300
+	tc.TestServerIP = "43.155.170.138:8001"
+	tc.TestPeopleCount = 100
 
 	tc.moveWg = sync.WaitGroup{}
 }
@@ -48,123 +45,59 @@ func (tc *TestController) Init() {
 func (tc *TestController) StartTesting() {
 	log.Println("Start Testing")
 	tc.TestServerConnections = GetNetworkCore().Connect(tc.TestServerIP, tc.TestPeopleCount)
-	//tc.TestUDPServerConnections = GetNetworkCore().ConnectUDP(tc.TestServerUDP, tc.TestPeopleCount)
+	tc.MatchingDone()
+	time.Sleep(time.Second * 3)
 	tc.TestersLogin()
-	tc.TestersChannelEnter()
-	tc.TesterMove()
-	//tc.WatchToggle()
-	//go tc.HeartBeat()
-	//go tc.ChatTest()
-	//}
+	time.Sleep(time.Second * 3)
+	tc.TesterAttack()
 }
 
-func (tc *TestController) TestersLogin() bool {
-	packet := content.S_TestPlayerLogin{}
-	for i := 0; i < tc.TestPeopleCount; i++ {
-		packet.Id = "tester" + strconv.Itoa(i)
-		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.ETestPlayerLogin)
-		time.Sleep(time.Microsecond * 100)
+func (tc *TestController) MatchingDone() {
+	var players []content.Player
+	for i := 0; i < tc.TestPeopleCount-1; i++ {
+		iString := fmt.Sprintf("%d", i)
+		player := content.Player{Playerid: iString, Teamid: 1, Nickname: iString}
+		players = append(players, player)
 	}
-	return true
+	player := content.Player{Playerid: "99999", Teamid: 1, Nickname: "99999"}
+	players = append(players, player)
+
+	packet := content.S_MatchingDone{SessionId: 100, Players: players}
+
+	GetNetworkCore().SendPacket(tc.TestServerConnections[0], packet, "MatchingDone")
 }
-func (tc *TestController) TestersChannelEnter() bool {
-	packet2 := content.S_ChannelEnter{}
-	for i := 0; i < tc.TestPeopleCount; i++ {
-		packet2.Id = "tester" + strconv.Itoa(i)
-		packet2.ChannelNum = 179
-		packet2.ChannelType = 4
-		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet2, content.ChannelEnter)
-		//GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet2, content.ChannelEnter)
-		log.Println("Send ChannelEnter ", packet2.Id)
-		time.Sleep(time.Microsecond * 100)
+
+func (tc *TestController) TestersLogin() {
+	for i := 0; i < tc.TestPeopleCount-1; i++ {
+		iString := fmt.Sprintf("%d", i)
+		packet := content.C_EnterGame{SessionId: 100, Playerid: iString, Nickname: iString, GameMode: 50, Type: 0, Phonenum: iString}
+		GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, "EnterGame")
 	}
-	return true
 }
 
-func (tc *TestController) TesterMove() {
-	packet := content.S_PlayerMove{}
-	packet.MoveSpeed = 800
-	packet.RotateSpeed = 300
-	FlipFlop := 0
-
+func (tc *TestController) TesterAttack() {
 	go func() {
 		for {
-			tc.moveWg.Add(tc.TestPeopleCount)
-			go func() {
-				for i := 0; i < tc.TestPeopleCount; i++ {
-
-					packet.Id = "tester" + strconv.Itoa(int(i))
-					if FlipFlop == 1 {
-						packet.Rotation = helper.NewVector3(0, 0, 0)
-						packet.Position = helper.NewVector3(0, 0, 200)
-					} else if FlipFlop == 2 {
-						packet.Rotation = helper.NewVector3(0, 0, 0)
-						packet.Position = helper.NewVector3(400, 0, 200)
-					} else {
-						packet.Rotation = helper.NewVector3(0, 0, 0)
-						packet.Position = helper.NewVector3(400, 400, 200)
-					}
-
-					FlipFlop = rand.Intn(3)
-
-					//log.Println("Id : ", packet.Id, " = ", packet.Position)
-					GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.PlayerMove)
-				}
-				tc.moveWg.Done()
-			}()
-			time.Sleep(time.Microsecond * 1000)
+			for i := 0; i < tc.TestPeopleCount-1; i++ {
+				iString := fmt.Sprintf("%d", i)
+				packet := content.C_ThrowAttack{Playerid: iString, Roomid: 1, Type: 1, CCtype: 9999, Charactertype: 1, Soundtype: 1, Timer: 1, Startpos: helper.Vector3{999, 999, 999},
+					Rotation: helper.Vector3{999, 999, 999}, Velocity: helper.Vector3{999, 999, 999}, IsSkill: true}
+				GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, "ThrowAttack")
+			}
+			time.Sleep(time.Second * 1)
 		}
-		tc.moveWg.Wait()
 	}()
 }
 
-func (tc *TestController) HeartBeat() {
-	packet := content.S_HeartBeat{}
-	for {
-		for i := 0; i < tc.TestPeopleCount; i++ {
-			packet.Id = "tester" + strconv.Itoa(int(i))
-			GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.HeartBeat)
-			time.Sleep(time.Microsecond * 10)
-			//log.Println("Id : ", packet.Id, " = ", packet.PacketName)
+func (tc *TestController) TesterDamage() {
+	go func() {
+		for {
+			for i := 0; i < tc.TestPeopleCount-1; i++ {
+				iString := fmt.Sprintf("%d", i)
+				packet := content.C_GiveDamages{Playerid: iString, Targetids: []string{iString}, Damage: 1}
+				GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, "GiveDamages")
+			}
+			time.Sleep(time.Second * 1)
 		}
-		time.Sleep(time.Second * 10)
-	}
-}
-
-func (tc *TestController) ChatTest() {
-	packet := content.S_NormalChat{}
-	j := 0
-	for {
-		for i := 0; i < tc.TestPeopleCount; i++ {
-			j++
-			packet.Id = "tester" + strconv.Itoa(int(i))
-			packet.Message = strconv.Itoa(j)
-			GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.NormalChat)
-			time.Sleep(time.Microsecond * 10)
-		}
-	}
-}
-
-func (tc *TestController) LogOut() {
-	packet := content.S_PlayerLogout{}
-	j := 0
-	for {
-		for i := 0; i < tc.TestPeopleCount; i++ {
-			j++
-			packet.Id = "tester" + strconv.Itoa(int(i))
-			GetNetworkCore().SendPacket(tc.TestServerConnections[i], packet, content.NormalChat)
-			time.Sleep(time.Microsecond * 10)
-		}
-	}
-}
-
-func (tc *TestController) WatchToggle() {
-	packet := content.S_ScreenWatchToggle{}
-	for i := 0; i < tc.TestPeopleCount; i++ {
-		packet.Id = "tester" + strconv.Itoa(int(i))
-		packet.IsOn = true
-		packet.ChannelNum = 11
-		GetNetworkCore().SendUDPPacket(tc.TestUDPServerConnections[i], packet, content.EScreenWatchToggle)
-		time.Sleep(time.Microsecond * 10)
-	}
+	}()
 }

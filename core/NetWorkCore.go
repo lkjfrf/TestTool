@@ -77,7 +77,7 @@ func (nc *NetworkCore) ConnectToUDPServer(serverAddr string, id string) *net.UDP
 	return conn
 }
 
-func (nc *NetworkCore) SendPacket(c *net.TCPConn, recvpkt any, pkttype uint16) {
+func (nc *NetworkCore) SendPacket(c *net.TCPConn, recvpkt any, pkttype string) {
 	sendBuffer := MakeSendBuffer(pkttype, recvpkt)
 
 	if c != nil {
@@ -93,23 +93,6 @@ func (nc *NetworkCore) SendPacket(c *net.TCPConn, recvpkt any, pkttype uint16) {
 
 	}
 }
-func (nc *NetworkCore) SendUDPPacket(c *net.UDPConn, recvpkt any, pkttype uint16) {
-	sendBuffer := MakeSendBuffer(pkttype, recvpkt)
-
-	if c != nil {
-		sent, err := c.Write(sendBuffer)
-		if err != nil {
-			log.Println("SendPacket ERROR :", err)
-		} else {
-			if sent != len(sendBuffer) {
-				log.Println("[Sent diffrent size] : SENT =", sent, "BufferSize =", len(sendBuffer))
-			}
-			//log.Println("c:", c, "-", pkttype)
-		}
-
-	}
-}
-
 func (nc *NetworkCore) Recv(conn *net.TCPConn, id string) {
 	header := make([]byte, 4)
 	for {
@@ -172,18 +155,21 @@ func JsonStrToStruct[T any](jsonstr string) T {
 	return data
 }
 
-func MakeSendBuffer[T any](pktid uint16, data T) []byte {
+func MakeSendBuffer[T any](pktname string, data T) []byte {
 	sendData, err := json.Marshal(&data)
 	if err != nil {
-		log.Println("MakeSendBuffer : Marshal Error", err)
+		log.Println("Marshal Error !", err)
 	}
-	sendBuffer := make([]byte, 6)
+	packetname := []byte(pktname)
 
-	pktsize := len(sendData) + 6
+	namesize := len(packetname)
+	datasize := len(sendData)
 
-	binary.LittleEndian.PutUint16(sendBuffer, uint16(pktsize))
-	binary.LittleEndian.PutUint16(sendBuffer[4:], pktid)
+	sendBuffer := make([]byte, 4)
+	binary.LittleEndian.PutUint16(sendBuffer, uint16(namesize))
+	binary.LittleEndian.PutUint16(sendBuffer[2:], uint16(datasize))
 
+	sendBuffer = append(sendBuffer, packetname...)
 	sendBuffer = append(sendBuffer, sendData...)
 
 	return sendBuffer
